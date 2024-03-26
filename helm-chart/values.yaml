@@ -11,18 +11,18 @@ tap:
       srvPort: 8898
     front:
       port: 8899
-    host: 127.0.0.1
+    host: 192.168.0.48
   regex: .*
   namespaces: []
   release:
     repo: https://helm.kubeshark.co
     name: kubeshark
-    namespace: default
-  persistentStorage: false
-  persistentStorageStatic: false
+    namespace: kubeshark
+  persistentStorage: true
+  persistentStorageStatic: true
   efsFileSytemIdAndPath: ""
-  storageLimit: 500Mi
-  storageClass: standard
+  storageLimit: 5Gi
+  storageClass: nfs-csi-kubeshark
   dryRun: false
   resources:
     hub:

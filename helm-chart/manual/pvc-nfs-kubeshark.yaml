@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pi8s-nfs-csi-kubeshark-pvc
+spec:
+  storageClassName: nfs-csi-kubeshark
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 5Gi
