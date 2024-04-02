@@ -11,7 +11,7 @@ tap:
       srvPort: 8898
     front:
       port: 8899
-    host: 192.168.0.48
+    host: 192.168.0.154
   regex: .*
   namespaces: []
   release:
@@ -22,7 +22,7 @@ tap:
   persistentStorageStatic: true
   efsFileSytemIdAndPath: ""
   storageLimit: 5Gi
-  storageClass: nfs-csi-kubeshark
+  storageClass: "nfs-csi-kubeshark"
   dryRun: false
   resources:
     hub:
@@ -86,7 +86,7 @@ tap:
     image: kubeshark/pf-ring-module:all
     unloadOnDestroy: false
   telemetry:
-    enabled: true
+    enabled: false
   defaultFilter: ""
   replayDisabled: false
   scriptingDisabled: false
