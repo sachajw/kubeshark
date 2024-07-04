@@ -69,11 +69,18 @@ type ProxyConfig struct {
 	Host   string       `yaml:"host" json:"host" default:"127.0.0.1"`
 }
 
+type OverrideTagConfig struct {
+	Worker string `yaml:"worker" json:"worker"`
+	Hub    string `yaml:"hub" json:"hub"`
+	Front  string `yaml:"front" json:"front"`
+}
+
 type DockerConfig struct {
-	Registry         string   `yaml:"registry" json:"registry" default:"docker.io/kubeshark"`
-	Tag              string   `yaml:"tag" json:"tag" default:""`
-	ImagePullPolicy  string   `yaml:"imagePullPolicy" json:"imagePullPolicy" default:"Always"`
-	ImagePullSecrets []string `yaml:"imagePullSecrets" json:"imagePullSecrets"`
+	Registry         string            `yaml:"registry" json:"registry" default:"docker.io/kubeshark"`
+	Tag              string            `yaml:"tag" json:"tag" default:""`
+	ImagePullPolicy  string            `yaml:"imagePullPolicy" json:"imagePullPolicy" default:"Always"`
+	ImagePullSecrets []string          `yaml:"imagePullSecrets" json:"imagePullSecrets"`
+	OverrideTag      OverrideTagConfig `yaml:"overrideTag" json:"overrideTag"`
 }
 
 type ResourcesConfig struct {
@@ -131,7 +138,7 @@ type CapabilitiesConfig struct {
 }
 
 type KernelModuleConfig struct {
-	Enabled         bool   `yaml:"enabled" json:"enabled" default:"true"`
+	Enabled         bool   `yaml:"enabled" json:"enabled" default:"false"`
 	Image           string `yaml:"image" json:"image" default:"kubeshark/pf-ring-module:all"`
 	UnloadOnDestroy bool   `yaml:"unloadOnDestroy" json:"unloadOnDestroy" default:"false"`
 }
@@ -141,9 +148,14 @@ type MetricsConfig struct {
 }
 
 type MiscConfig struct {
-	JsonTTL      string `yaml:"jsonTTL" json:"jsonTTL" default:"5m"`
-	PcapTTL      string `yaml:"pcapTTL" json:"pcapTTL" default:"10s"`
-	PcapErrorTTL string `yaml:"pcapErrorTTL" json:"pcapErrorTTL" default:"60s"`
+	JsonTTL                     string `yaml:"jsonTTL" json:"jsonTTL" default:"5m"`
+	PcapTTL                     string `yaml:"pcapTTL" json:"pcapTTL" default:"10s"`
+	PcapErrorTTL                string `yaml:"pcapErrorTTL" json:"pcapErrorTTL" default:"60s"`
+	TrafficSampleRate           int    `yaml:"trafficSampleRate" json:"trafficSampleRate" default:"100"`
+	TcpStreamChannelTimeoutMs   int    `yaml:"tcpStreamChannelTimeoutMs" json:"tcpStreamChannelTimeoutMs" default:"10000"`
+	TcpStreamChannelTimeoutShow bool   `yaml:"tcpStreamChannelTimeoutShow" json:"tcpStreamChannelTimeoutShow" default:"false"`
+	ResolutionStrategy          string `yaml:"resolutionStrategy" json:"resolutionStrategy" default:"auto"`
+	Profile                     bool   `yaml:"profile" json:"profile" default:"false"`
 }
 
 type TapConfig struct {
@@ -151,6 +163,7 @@ type TapConfig struct {
 	Proxy                      ProxyConfig           `yaml:"proxy" json:"proxy"`
 	PodRegexStr                string                `yaml:"regex" json:"regex" default:".*"`
 	Namespaces                 []string              `yaml:"namespaces" json:"namespaces" default:"[]"`
+	BpfOverride                string                `yaml:"bpfOverride" json:"bpfOverride" default:""`
 	Release                    ReleaseConfig         `yaml:"release" json:"release"`
 	PersistentStorage          bool                  `yaml:"persistentStorage" json:"persistentStorage" default:"false"`
 	PersistentStorageStatic    bool                  `yaml:"persistentStorageStatic" json:"persistentStorageStatic" default:"false"`
@@ -161,6 +174,7 @@ type TapConfig struct {
 	Resources                  ResourcesConfig       `yaml:"resources" json:"resources"`
 	ServiceMesh                bool                  `yaml:"serviceMesh" json:"serviceMesh" default:"true"`
 	Tls                        bool                  `yaml:"tls" json:"tls" default:"true"`
+	PacketCapture              string                `yaml:"packetCapture" json:"packetCapture" default:"best"`
 	IgnoreTainted              bool                  `yaml:"ignoreTainted" json:"ignoreTainted" default:"false"`
 	Labels                     map[string]string     `yaml:"labels" json:"labels" default:"{}"`
 	Annotations                map[string]string     `yaml:"annotations" json:"annotations" default:"{}"`
@@ -179,8 +193,6 @@ type TapConfig struct {
 	Capabilities               CapabilitiesConfig    `yaml:"capabilities" json:"capabilities"`
 	GlobalFilter               string                `yaml:"globalFilter" json:"globalFilter"`
 	Metrics                    MetricsConfig         `yaml:"metrics" json:"metrics"`
-	TrafficSampleRate          int                   `yaml:"trafficSampleRate" json:"trafficSampleRate" default:"100"`
-	TcpStreamChannelTimeoutMs  int                   `yaml:"tcpStreamChannelTimeoutMs" json:"tcpStreamChannelTimeoutMs" default:"10000"`
 	Misc                       MiscConfig            `yaml:"misc" json:"misc"`
 }
 

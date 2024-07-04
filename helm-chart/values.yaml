@@ -4,6 +4,10 @@ tap:
     tag: ""
     imagePullPolicy: Always
     imagePullSecrets: []
+    overrideTag:
+      worker: ""
+      hub: ""
+      front: ""
   proxy:
     worker:
       srvPort: 30001
@@ -14,6 +18,7 @@ tap:
     host: 192.168.0.154
   regex: .*
   namespaces: []
+  bpfOverride: ""
   release:
     repo: https://helm.kubeshark.co
     name: kubeshark
@@ -48,6 +53,7 @@ tap:
         memory: 50Mi
   serviceMesh: true
   tls: true
+  packetCapture: best
   ignoreTainted: false
   labels: {}
   annotations: {}
@@ -82,7 +88,7 @@ tap:
   ipv6: true
   debug: false
   kernelModule:
-    enabled: true
+    enabled: false
     image: kubeshark/pf-ring-module:all
     unloadOnDestroy: false
   telemetry:
@@ -110,20 +116,25 @@ tap:
   globalFilter: ""
   metrics:
     port: 49100
-  trafficSampleRate: 100
-  tcpStreamChannelTimeoutMs: 10000
   misc:
     jsonTTL: 5m
     pcapTTL: 10s
     pcapErrorTTL: 60s
+    trafficSampleRate: 100
+    tcpStreamChannelTimeoutMs: 10000
+    tcpStreamChannelTimeoutShow: false
+    resolutionStrategy: auto
+    profile: false
 logs:
   file: ""
+  grep: ""
 kube:
   configPath: ""
   context: ""
 dumpLogs: false
 headless: false
 license: ""
+cloudLicenseEnabled: true
 scripting:
   env: {}
   source: ""

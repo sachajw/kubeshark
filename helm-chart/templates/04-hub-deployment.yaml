@@ -16,7 +16,7 @@ spec:
   selector:
     matchLabels:
       app.kubeshark.co/app: hub
-      {{- include "kubeshark.labels" . | nindent 6 }}
+      {{- include "kubeshark.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       labels:
@@ -44,8 +44,12 @@ spec:
               fieldRef:
                 fieldPath: metadata.namespace
           - name: KUBESHARK_CLOUD_API_URL
-            value: 'https://api.kubeshark.co'
+            value: 'https://master.admin.kubeshark.co'
+        {{- if .Values.tap.docker.overrideTag.hub }}
+          image: '{{ .Values.tap.docker.registry }}/hub:{{ .Values.tap.docker.overrideTag.hub }}'
+        {{ else }}
           image: '{{ .Values.tap.docker.registry }}/hub:{{ not (eq .Values.tap.docker.tag "") | ternary .Values.tap.docker.tag (printf "v%s" .Chart.Version) }}'
+        {{- end }}
           imagePullPolicy: {{ .Values.tap.docker.imagePullPolicy }}
           readinessProbe:
             periodSeconds: 1

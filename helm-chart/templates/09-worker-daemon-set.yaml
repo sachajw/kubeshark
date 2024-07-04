@@ -16,7 +16,7 @@ spec:
   selector:
     matchLabels:
       app.kubeshark.co/app: worker
-      {{- include "kubeshark.labels" . | nindent 6 }}
+      {{- include "kubeshark.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       labels:
@@ -51,6 +51,8 @@ spec:
             - '{{ .Values.tap.proxy.worker.srvPort }}'
             - -metrics-port
             - '{{ .Values.tap.metrics.port }}'
+            - -packet-capture
+            - '{{ .Values.tap.packetCapture }}'
             - -unixsocket
           {{- if .Values.tap.serviceMesh }}
             - -servicemesh
@@ -60,12 +62,21 @@ spec:
           {{- if .Values.tap.kernelModule.enabled }}
             - -kernel-module
           {{- end }}
+          {{- if ne .Values.tap.packetCapture "ebpf" }}
+            - -disable-ebpf
+          {{- end }}
+            - -resolution-strategy
+            - '{{ .Values.tap.misc.resolutionStrategy }}'
           {{- if .Values.tap.debug }}
             - -debug
             - -dumptracer
             - "100000000"
           {{- end }}
+        {{- if .Values.tap.docker.overrideTag.worker }}
+          image: '{{ .Values.tap.docker.registry }}/worker:{{ .Values.tap.docker.overrideTag.worker }}'
+        {{ else }}
           image: '{{ .Values.tap.docker.registry }}/worker:{{ not (eq .Values.tap.docker.tag "") | ternary .Values.tap.docker.tag (printf "v%s" .Chart.Version) }}'
+        {{- end }}
           imagePullPolicy: {{ .Values.tap.docker.imagePullPolicy }}
           name: sniffer
           ports:
@@ -82,9 +93,13 @@ spec:
               fieldRef:
                 fieldPath: metadata.namespace
           - name: TCP_STREAM_CHANNEL_TIMEOUT_MS
-            value: '{{ .Values.tap.tcpStreamChannelTimeoutMs }}'
+            value: '{{ .Values.tap.misc.tcpStreamChannelTimeoutMs }}'
+          - name: TCP_STREAM_CHANNEL_TIMEOUT_SHOW
+            value: '{{ .Values.tap.misc.tcpStreamChannelTimeoutShow }}'
           - name: KUBESHARK_CLOUD_API_URL
-            value: 'https://api.kubeshark.co'
+            value: 'https://master.admin.kubeshark.co'
+          - name: PROFILING_ENABLED
+            value: '{{ .Values.tap.misc.profile }}'
           resources:
             limits:
               cpu: {{ .Values.tap.resources.sniffer.limits.cpu }}
@@ -132,7 +147,7 @@ spec:
         - name: unload-pf-ring
           image: {{ .Values.tap.kernelModule.image }}
           command: ["/bin/sh"]
-          args: ["-c", "trap 'rmmod pf_ring && sleep 3' SIGTERM; while true; do sleep 1; done"] 
+          args: ["-c", "trap 'rmmod pf_ring && sleep 3' SIGTERM; while true; do sleep 1; done"]
           securityContext:
             capabilities:
               add:
@@ -147,10 +162,17 @@ spec:
             - ./tracer
             - -procfs
             - /hostproc
+          {{- if ne .Values.tap.packetCapture "ebpf" }}
+            - -disable-ebpf
+          {{- end }}          
           {{- if .Values.tap.debug }}
             - -debug
           {{- end }}
+        {{- if .Values.tap.docker.overrideTag.worker }}
+          image: '{{ .Values.tap.docker.registry }}/worker:{{ .Values.tap.docker.overrideTag.worker }}'
+        {{ else }}
           image: '{{ .Values.tap.docker.registry }}/worker:{{ not (eq .Values.tap.docker.tag "") | ternary .Values.tap.docker.tag (printf "v%s" .Chart.Version) }}'
+        {{- end }}
           imagePullPolicy: {{ .Values.tap.docker.imagePullPolicy }}
           name: tracer
           env:
@@ -175,6 +197,9 @@ spec:
                 {{- range .Values.tap.capabilities.ebpfCapture }}
                 {{ print "- " . }}
                 {{- end }}
+                {{- range .Values.tap.capabilities.networkCapture }}
+                {{ print "- " . }}
+                {{- end }}
               drop:
                 - ALL
           volumeMounts:
@@ -186,6 +211,9 @@ spec:
               readOnly: true
             - mountPath: /app/data
               name: data
+            - mountPath: /etc/os-release
+              name: os-release
+              readOnly: true
       {{- end }}
       dnsPolicy: ClusterFirstWithHostNet
       hostNetwork: true
@@ -215,6 +243,9 @@ spec:
         - name: lib-modules
           hostPath:
             path: /lib/modules
+        - hostPath:
+            path: /etc/os-release
+          name: os-release
         - name: data
 {{- if .Values.tap.persistentStorage }}
           persistentVolumeClaim:
